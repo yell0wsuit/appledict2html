@@ -4,62 +4,48 @@ This removes the dependency on CSS styles by converting span class names into
 appropriate semantic HTML tags and structural markup.
 """
 
-import os
-from bs4 import BeautifulSoup
+import argparse
 
-from appledict2html.helpers.span_converters import (
-    convert_span_styles,
-    convert_apple_span_styles,
-)
-from appledict2html.helpers.wrapinbrackets import wrap_class_text_with_brackets
-from appledict2html.helpers.process_definition_phrases import (
-    convert_x_xo_blocks,
-    convert_subsenses_to_list,
-)
-from appledict2html.helpers.process_main_definition import convert_senses_to_list
-from appledict2html.helpers.cleanup import (
-    remove_bullet_spans,
-    convert_origin_block,
-    convert_derivatives_block,
-    convert_usage_note_block,
-    inject_hw_linebreaks,
-    remove_empty_tags,
-    convert_heading_spans_to_p,
-)
+from appledict2html.helpers.io_utils import process_single_file, process_folder
 
 
-# --- Full processing pipeline ---
-def process_html(result: str) -> str:
-    """Main processing pipeline: applies all span-to-tag conversions
-    and structural transformations"""
-    soup = BeautifulSoup(result, "lxml")
-    convert_x_xo_blocks(soup)
-    convert_span_styles(soup)
-    wrap_class_text_with_brackets(soup, {"lg"})
-    convert_apple_span_styles(soup)
-    convert_subsenses_to_list(soup)
-    convert_senses_to_list(soup)
-    remove_bullet_spans(soup)
-    convert_origin_block(soup)
-    convert_derivatives_block(soup)
-    convert_usage_note_block(soup)
-    inject_hw_linebreaks(soup)
-    remove_empty_tags(soup)
-    convert_heading_spans_to_p(soup)
-    return str(soup.prettify())
+def main():
+    """Main function to parse command line arguments and process files."""
+    parser = argparse.ArgumentParser(
+        description="Convert Apple Dictionary HTML to semantic HTML."
+    )
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--single", nargs=2, metavar=("input", "output"), help="Process a single file."
+    )
+    group.add_argument(
+        "--multiple",
+        nargs="+",
+        metavar=("input_folder", "output_folder"),
+        help="Process all files in a folder.",
+    )
+    parser.add_argument(
+        "--replace",
+        action="store_true",
+        help="Replace files in place (only with --multiple).",
+    )
+
+    args = parser.parse_args()
+
+    if args.single:
+        input_path, output_path = args.single
+        process_single_file(input_path, output_path)
+    elif args.multiple:
+        input_folder = args.multiple[0]
+        if args.replace:
+            process_folder(input_folder, replace=True)
+        else:
+            if len(args.multiple) < 2:
+                print("Error: output_folder must be specified if not using --replace.")
+                return
+            output_folder = args.multiple[1]
+            process_folder(input_folder, output_folder=output_folder, replace=False)
 
 
-INPUT_FILENAME = "43957_handle.html"
-INPUT_FILENAME = "03183_anathematize.html"
-
-with open(INPUT_FILENAME, "r", encoding="utf-8") as f:
-    html = f.read()
-
-HTML_OUT = process_html(html)
-
-# Append _processed before the .html extension
-base, ext = os.path.splitext(INPUT_FILENAME)
-OUTPUT_FILENAME = f"{base}_processed{ext}"
-
-with open(OUTPUT_FILENAME, "w", encoding="utf-8") as f:
-    f.write(HTML_OUT)
+if __name__ == "__main__":
+    main()

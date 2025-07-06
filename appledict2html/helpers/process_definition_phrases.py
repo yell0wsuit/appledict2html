@@ -1,7 +1,7 @@
 """Module to process definition blocks inside the Phrases / Phrase verbs"""
 
 from bs4 import BeautifulSoup, Tag
-from appledict2html.helpers.class_check import is_class, has_all_classes
+from .class_check import is_class, has_all_classes
 
 
 def group_xo0_blocks(soup: BeautifulSoup):
