@@ -605,6 +605,35 @@ def inject_hw_linebreaks(soup: BeautifulSoup):
                     break
 
 
+def remove_empty_tags(soup: BeautifulSoup):
+    """Remove all empty tags (no content or only whitespace), excluding `<d:index>`."""
+    for tag in soup.find_all():
+        if (
+            isinstance(tag, Tag)
+            and tag.name != "d:index"
+            and not tag.get_text(strip=True)
+            and not tag.find()  # no child tags
+        ):
+            tag.decompose()
+
+
+def convert_heading_spans_to_p(soup: BeautifulSoup):
+    """Convert `<span class='hg x_xh0'>` to `<p>` and remove its classes."""
+    for span in soup.find_all("span"):
+        if not isinstance(span, Tag):
+            continue
+        class_set = set(span.get("class") or [])
+        if "hg" in class_set and "x_xh0" in class_set:
+            # Create a <p> tag with same content
+            p = soup.new_tag("p")
+
+            # Move all children into the new <p>
+            while span.contents:
+                p.append(span.contents[0])  # moves content instead of copying
+
+            span.replace_with(p)
+
+
 # --- Full processing pipeline ---
 def process_html(result: str) -> str:
     """Main processing pipeline: applies all span-to-tag conversions
@@ -621,6 +650,8 @@ def process_html(result: str) -> str:
     convert_derivatives_block(soup)
     convert_usage_note_block(soup)
     inject_hw_linebreaks(soup)
+    remove_empty_tags(soup)
+    convert_heading_spans_to_p(soup)
     return str(soup.prettify())
 
 
