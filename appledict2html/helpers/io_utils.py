@@ -1,6 +1,7 @@
 """Helpers for file and folder processing, including multiprocessing and user confirmation."""
 
 import os
+import traceback
 from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
 
@@ -9,11 +10,18 @@ from .process_html import process_html
 
 def process_single_file(input_path, output_path):
     """Process a single HTML file and write the output."""
-    with open(input_path, "r", encoding="utf-8") as f:
-        html = f.read()
-    html_out = process_html(html)
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(html_out)
+    try:
+        with open(input_path, "r", encoding="utf-8") as f:
+            html = f.read()
+        html_out = process_html(html)
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(html_out)
+        print(f"{input_path} -> {output_path} ✅ done")
+        return True
+    except Exception:
+        print(f"{input_path} -> {output_path} ❌ error")
+        print(traceback.format_exc())
+        return False
 
 
 def _process_file_worker(args):
@@ -58,10 +66,16 @@ def process_folder(input_folder, output_folder=None, replace=False):
         tasks.append((input_path, output_path))
 
     with Pool(cpu_count()) as pool:
-        list(
+        results = list(
             tqdm(
                 pool.imap_unordered(_process_file_worker, tasks),
                 total=len(tasks),
                 desc="Processing files",
             )
         )
+
+    for (input_path, output_path), success in zip(tasks, results):
+        if success:
+            print(f"{input_path} -> {output_path} ✅ done")
+        else:
+            print(f"{input_path} -> {output_path} ❌ error")
