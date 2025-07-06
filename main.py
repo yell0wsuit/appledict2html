@@ -33,11 +33,9 @@ APPLE_STYLE_MAP = {
     "gg": {"tag": "em"},
 }
 
-# Convert multiple classes to semantic tags. Currently left as comment due to bugs,
-# will revise or remove if needed.
+# Convert multiple classes to semantic tags
 COMPOSITE_STYLE_MAP = {
-    # frozenset(["l", "x_xoh"]): {"tag": "b"},
-    # frozenset(["str", "t_l"]): {"tag": "u"},
+    frozenset(["gp", "ty_hom", "tg_hw"]): {"tag": "sup"},
 }
 
 
