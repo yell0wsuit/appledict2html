@@ -7,6 +7,8 @@ appropriate semantic HTML tags and structural markup.
 import os
 from typing import Optional, Set
 from bs4 import BeautifulSoup, Tag
+from bs4.element import NavigableString
+
 
 # Convert generic span classes (e.g., bold, italic) into semantic HTML tags
 STYLE_MAP = {
@@ -32,6 +34,7 @@ APPLE_STYLE_MAP = {
     "lg": {"tag": "em"},
     "ff": {"tag": ["em", "strong"]},
     "gg": {"tag": "em"},
+    "subEnt": {"tag": "sub"},
 }
 
 # Convert multiple classes to semantic tags
@@ -581,6 +584,27 @@ def convert_usage_note_block(soup: BeautifulSoup):
                 span.attrs = {"class": "usage_title"}
 
 
+def inject_hw_linebreaks(soup: BeautifulSoup):
+    """Append `[linebreaks]` after the headword text in `<span class='hw'>`
+    if linebreaks is valid."""
+
+    for span in soup.find_all("span", class_="hw"):
+        if not isinstance(span, Tag):
+            continue
+
+        linebreaks = span.get("linebreaks")
+        if not linebreaks or "|" not in linebreaks or "¦" not in linebreaks:
+            continue
+
+        # Find the first NavigableString child (assume it's the headword)
+        for i, child in enumerate(span.contents):
+            if isinstance(child, NavigableString):
+                stripped = child.strip()
+                if stripped:
+                    span.insert(i + 1, NavigableString(f" [{linebreaks}]"))
+                    break
+
+
 # --- Full processing pipeline ---
 def process_html(result: str) -> str:
     """Main processing pipeline: applies all span-to-tag conversions
@@ -596,6 +620,7 @@ def process_html(result: str) -> str:
     convert_origin_block(soup)
     convert_derivatives_block(soup)
     convert_usage_note_block(soup)
+    inject_hw_linebreaks(soup)
     return str(soup.prettify())
 
 
