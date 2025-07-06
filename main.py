@@ -5,6 +5,7 @@ appropriate semantic HTML tags and structural markup.
 """
 
 import os
+from typing import Optional, Set
 from bs4 import BeautifulSoup, Tag
 
 # Convert generic span classes (e.g., bold, italic) into semantic HTML tags
@@ -154,25 +155,38 @@ def wrap_with_tags_preserving_content(
     return outermost
 
 
-def wrap_class_text_with_brackets(soup: BeautifulSoup, class_names: set[str]):
-    """Wrap the full rendered content of elements with
-    specified classes in square brackets `[ ... ]`"""
+def wrap_class_text_with_brackets(
+    soup: BeautifulSoup,
+    class_names: Set[str],
+    skip_parent_classes: Optional[Set[str]] = None,
+):
+    """
+    Wrap the full rendered content of elements with `class_names` in square brackets `[ ... ]`,
+    unless they are inside any ancestor with a class in `skip_parent_classes`.
+    """
+    if skip_parent_classes is None:
+        skip_parent_classes = {"vg"}
+
     for tag in soup.find_all(True):  # Matches any tag
         if not isinstance(tag, Tag):
             continue
 
-        classes = set(tag.get("class") or [])
-        if not classes.intersection(class_names):
+        tag_classes = set(tag.get("class") or [])
+        if not tag_classes.intersection(class_names):
             continue
 
-        # Create new wrapper tag
+        # Skip if inside a parent with a skip class
+        if tag.find_parent(
+            lambda parent: isinstance(parent, Tag)
+            and not set(parent.get("class") or []).isdisjoint(skip_parent_classes)
+        ):
+            continue
+
+        # Wrap with brackets
         wrapper = soup.new_tag("span")
         wrapper.append(soup.new_string("["))
 
-        # Move original children into the wrapper
-        for child in list(
-            tag.contents
-        ):  # list() to avoid modification during iteration
+        for child in list(tag.contents):  # Copy to avoid mutation during loop
             wrapper.append(child.extract())
 
         wrapper.append(soup.new_string("]"))
