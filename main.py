@@ -4,6 +4,7 @@ This removes the dependency on CSS styles by converting span class names into
 appropriate semantic HTML tags and structural markup.
 """
 
+import os
 from bs4 import BeautifulSoup, Tag
 
 # Convert generic span classes (e.g., bold, italic) into semantic HTML tags
@@ -247,6 +248,16 @@ def convert_xo1_to_list(soup: BeautifulSoup):
         # Create nested list of .x_xo2 spans
         nested_ul = soup.new_tag("ul")
         for xo2 in xo1.find_all("span", class_="x_xo2", recursive=False):
+            if not isinstance(xo2, Tag):
+                continue
+
+            # Skip if xo2 has no visible content
+            if not xo2.get_text(strip=True) and not xo2.find(
+                True
+            ):  # no text, no children
+                xo2.decompose()
+                continue
+
             li2 = soup.new_tag("li")
             li2.append(xo2.extract())
             nested_ul.append(li2)
@@ -318,6 +329,218 @@ def convert_subsenses_to_list(soup: BeautifulSoup):
             entry.append(ul)
 
 
+CLASS_SETS = {
+    "t_core": {"msDict", "x_xd1", "t_core"},
+    "t_subsense": {"msDict", "x_xd1", "hasSn", "t_subsense"},
+    "se2": {"se2", "x_xd1", "hasSn"},
+    "t_first": {"msDict", "x_xd1sub", "t_first"},
+    "subsense_in_se2": {"msDict", "x_xd1sub", "hasSn", "t_subsense"},
+    "skip_label": {"gp", "x_xdh", "sn", "ty_label", "tg_se2"},
+}
+
+
+def has_classes(tag: Tag, class_key: str) -> bool:
+    """Check if a `<span>` tag has all the classes defined in `CLASS_SETS[class_key]`."""
+    return tag.name == "span" and CLASS_SETS[class_key].issubset(
+        set(tag.get("class") or [])
+    )
+
+
+def convert_tag(tag: Tag, new_name: str):
+    """Convert the tag's name unless it's a label span (e.g., sense number)."""
+    if has_classes(tag, "skip_label"):
+        return
+    tag.name = new_name
+
+
+def create_li_with_contents(soup: BeautifulSoup, tag: Tag) -> Tag:
+    """Wrap the inner HTML of `<tag>` in a new `<li>` tag and return it."""
+    li = soup.new_tag("li")
+    li.append(BeautifulSoup(tag.decode_contents(), "html.parser"))
+    return li
+
+
+def process_t_core_blocks(soup: BeautifulSoup, se1: Tag):
+    """Convert all main sense (`t_core`) blocks and their subsenses
+    (`t_subsense`) into a nested `<ul>`/`<li>` list structure."""
+    t_core_blocks = [
+        tag
+        for tag in se1.find_all("span")
+        if isinstance(tag, Tag) and has_classes(tag, "t_core")
+    ]
+    if not t_core_blocks:
+        return
+
+    ul_core = soup.new_tag("ul")
+
+    for core in t_core_blocks:
+        li = create_li_with_contents(soup, core)
+
+        # Handle sibling t_subsense blocks
+        sub_ul = soup.new_tag("ul")
+        sibling = core.find_next_sibling()
+        while sibling and not (
+            isinstance(sibling, Tag) and has_classes(sibling, "t_core")
+        ):
+            next_sibling = sibling.find_next_sibling()
+            if isinstance(sibling, Tag) and has_classes(sibling, "t_subsense"):
+                sub_ul.append(create_li_with_contents(soup, sibling))
+                sibling.decompose()
+            sibling = next_sibling
+
+        if sub_ul.contents:
+            li.append(sub_ul)
+
+        ul_core.append(li)
+        core.decompose()
+
+    se1.append(ul_core)
+
+
+def process_se2_blocks(soup: BeautifulSoup, se1: Tag):
+    """
+    Convert second-level sense blocks (se2) into `<li>` elements inside a `<ul>`,
+    and nest any `t_first` (definition) or subsense (`x_xd1sub`) elements under them.
+    """
+    se2_blocks = [
+        tag
+        for tag in se1.find_all("span", recursive=False)
+        if isinstance(tag, Tag) and has_classes(tag, "se2")
+    ]
+    if not se2_blocks:
+        return
+
+    ul_top = soup.new_tag("ul")
+
+    for se2 in se2_blocks:
+        convert_tag(se2, "li")
+
+        # Append definition (t_first)
+        t_first = se2.find(lambda t: isinstance(t, Tag) and has_classes(t, "t_first"))
+        if t_first and isinstance(t_first, Tag):
+            for content in list(t_first.contents):
+                se2.append(content)
+            t_first.decompose()
+
+        # Append nested subsenses
+        sub_ul = soup.new_tag("ul")
+        for subsense in se2.find_all(
+            lambda t: isinstance(t, Tag) and has_classes(t, "subsense_in_se2"),
+            recursive=False,
+        ):
+            if isinstance(subsense, Tag):
+                sub_ul.append(create_li_with_contents(soup, subsense))
+            subsense.decompose()
+
+        if sub_ul.contents:
+            se2.append(sub_ul)
+
+        ul_top.append(se2)
+
+    se1.append(ul_top)
+
+
+def convert_senses_to_list(soup: BeautifulSoup):
+    """Convert main senses and subsenses into structured <ul>/<li> elements"""
+
+    for se1 in soup.find_all("span", class_="se1"):
+        if not isinstance(se1, Tag):
+            continue
+
+        convert_tag(se1, "div")
+
+        # Convert parts of speech
+        for pos_block in se1.find_all("span", class_="x_xdh"):
+            if isinstance(pos_block, Tag):
+                convert_tag(pos_block, "p")
+
+        process_t_core_blocks(soup, se1)
+        process_se2_blocks(soup, se1)
+
+
+def remove_bullet_spans(soup: BeautifulSoup):
+    """Remove all bullet spans since we have `<li>` for that"""
+    target_classes = {"gp", "sn", "tg_msDict"}
+    for span in soup.find_all("span"):
+        if not isinstance(span, Tag):
+            continue
+        class_set = set(span.get("class") or [])
+        if (
+            target_classes.issubset(class_set)
+            and span.string
+            and span.string.strip() == "•"
+        ):
+            span.decompose()
+
+
+def convert_origin_block(soup: BeautifulSoup):
+    """
+    Convert `<div class="etym x_xo0">` to `<div class="origin_block">`,
+    and convert child spans as follows:
+      - `<span class="x_xo1">` → `<p>`
+      - `<span class="gp x_xoLblBlk ty_label tg_etym">` → `<p class="origin_title">`
+
+    Leaves other content unchanged.
+    """
+    for etym_div in soup.find_all("div", class_="etym"):
+        if not isinstance(etym_div, Tag):
+            continue
+
+        classes = etym_div.get("class") or []
+        if "x_xo0" not in classes:
+            continue
+
+        # Change the parent class
+        etym_div["class"] = ["origin_block"]
+
+        for child in etym_div.find_all("span", recursive=True):
+            if not isinstance(child, Tag):
+                continue
+
+            child_classes = set(child.get("class") or [])
+
+            if "x_xo1" in child_classes:
+                child.name = "p"
+                child.attrs.clear()
+
+            elif {"gp", "x_xoLblBlk", "ty_label", "tg_etym"}.issubset(child_classes):
+                child.name = "p"
+                child.attrs = {"class": "origin_title"}
+
+
+def convert_derivatives_block(soup: BeautifulSoup):
+    """
+    Convert `<div class="subEntryBlock x_xo0 t_derivatives">` to `<div class="derivatives_block">`,
+    and transform children:
+      - `<span class="gp x_xoLblBlk ty_label tg_subEntryBlock">` → `<p class="derivatives_title">`
+      - `<span class="x_xoh">` → `<p>`
+    """
+    for div in soup.find_all("div", class_="subEntryBlock"):
+        if not isinstance(div, Tag):
+            continue
+
+        class_list = div.get("class") or []
+        if "x_xo0" not in class_list or "t_derivatives" not in class_list:
+            continue
+
+        # Replace classes with "derivatives_block"
+        div["class"] = ["derivatives_block"]
+
+        for span in div.find_all("span", recursive=True):
+            if not isinstance(span, Tag):
+                continue
+
+            classes = set(span.get("class") or [])
+
+            if {"gp", "x_xoLblBlk", "ty_label", "tg_subEntryBlock"}.issubset(classes):
+                span.name = "p"
+                span.attrs = {"class": "derivatives_title"}
+
+            elif "x_xoh" in classes:
+                span.name = "p"
+                span.attrs.clear()
+
+
 # --- Full processing pipeline ---
 def process_html(result: str) -> str:
     """Main processing pipeline: applies all span-to-tag conversions
@@ -328,12 +551,23 @@ def process_html(result: str) -> str:
     wrap_class_text_with_brackets(soup, {"lg"})
     convert_apple_span_styles(soup)
     convert_subsenses_to_list(soup)
+    convert_senses_to_list(soup)
+    remove_bullet_spans(soup)
+    convert_origin_block(soup)
+    convert_derivatives_block(soup)
     return str(soup.prettify())
 
 
-with open("block_test.html", "r", encoding="utf-8") as f:
+INPUT_FILENAME = "43957_handle.html"
+
+with open(INPUT_FILENAME, "r", encoding="utf-8") as f:
     html = f.read()
 
 HTML_OUT = process_html(html)
-with open("block_test_processed.html", "w", encoding="utf-8") as f:
+
+# Append _processed before the .html extension
+base, ext = os.path.splitext(INPUT_FILENAME)
+OUTPUT_FILENAME = f"{base}_processed{ext}"
+
+with open(OUTPUT_FILENAME, "w", encoding="utf-8") as f:
     f.write(HTML_OUT)
