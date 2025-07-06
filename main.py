@@ -37,6 +37,7 @@ APPLE_STYLE_MAP = {
 # Convert multiple classes to semantic tags
 COMPOSITE_STYLE_MAP = {
     frozenset(["gp", "ty_hom", "tg_hw"]): {"tag": "sup"},
+    frozenset(["gp", "ty_hom", "tg_xr"]): {"tag": "sup"},
 }
 
 
@@ -302,8 +303,8 @@ def has_all_classes(tag: Tag, required_classes: set[str]) -> bool:
 
 def convert_subsenses_to_list(soup: BeautifulSoup):
     """
-    Convert <span class="msDict x_xo2sub hasSn t_subsense"> elements into <li>,
-    and wrap them in <ul>. Insert the <ul> into their parent .se2 .x_xo2 block.
+    Convert `<span class="msDict x_xo2sub hasSn t_subsense">` elements into `<li>`,
+    and wrap them in `<ul>`. Insert the `<ul>` into their parent `.se2 .x_xo2` block.
     """
 
     required_classes = {"msDict", "x_xo2sub", "hasSn", "t_subsense"}
@@ -453,7 +454,7 @@ def process_se2_blocks(soup: BeautifulSoup, se1: Tag):
 
 
 def convert_senses_to_list(soup: BeautifulSoup):
-    """Convert main senses and subsenses into structured <ul>/<li> elements"""
+    """Convert main senses and subsenses into structured `<ul>`/`<li>` elements"""
 
     for se1 in soup.find_all("span", class_="se1"):
         if not isinstance(se1, Tag):
@@ -553,6 +554,33 @@ def convert_derivatives_block(soup: BeautifulSoup):
                 span.attrs.clear()
 
 
+def convert_usage_note_block(soup: BeautifulSoup):
+    """
+    Convert `<div class="note x_xo0">` to `<div class="usage_block">`,
+    and convert child `<span class="lbl x_blk">` to `<p class="usage_title">`.
+    """
+    for note_div in soup.find_all("div", class_="note"):
+        if not isinstance(note_div, Tag):
+            continue
+
+        class_list = note_div.get("class") or []
+        if "x_xo0" not in class_list:
+            continue
+
+        # Rename the div class
+        note_div["class"] = ["usage_block"]
+
+        for span in note_div.find_all("span", recursive=True):
+            if not isinstance(span, Tag):
+                continue
+
+            classes = set(span.get("class") or [])
+
+            if {"lbl", "x_blk"}.issubset(classes):
+                span.name = "p"
+                span.attrs = {"class": "usage_title"}
+
+
 # --- Full processing pipeline ---
 def process_html(result: str) -> str:
     """Main processing pipeline: applies all span-to-tag conversions
@@ -567,6 +595,7 @@ def process_html(result: str) -> str:
     remove_bullet_spans(soup)
     convert_origin_block(soup)
     convert_derivatives_block(soup)
+    convert_usage_note_block(soup)
     return str(soup.prettify())
 
 
