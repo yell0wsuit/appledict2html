@@ -2,13 +2,24 @@
 
 import os
 import traceback
+import logging
 from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
 
 from .process_html import process_html
 
 
-def process_single_file(input_path, output_path):
+# Setup logging
+logger = logging.getLogger("appledict2semantic")
+logger.setLevel(logging.INFO)
+if not logger.hasHandlers():
+    fh = logging.FileHandler("appledict2semantic.log", mode="a", encoding="utf-8")
+    formatter = logging.Formatter("%(asctime)s %(levelname)s: %(message)s")
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+
+
+def process_single_file(input_path, output_path, verbose=True):
     """Process a single HTML file and write the output."""
     try:
         with open(input_path, "r", encoding="utf-8") as f:
@@ -16,17 +27,18 @@ def process_single_file(input_path, output_path):
         html_out = process_html(html)
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(html_out)
-        print(f"{input_path} -> {output_path} ✅ done")
+        if verbose:
+            print(f"{input_path} -> {output_path} ✅ done")
         return True
     except (OSError, IOError, ValueError):
-        print(f"{input_path} -> {output_path} ❌ error")
-        print(traceback.format_exc())
+        logger.error("%s -> %s ❌ error", input_path, output_path)
+        logger.error(traceback.format_exc())
         return False
 
 
 def _process_file_worker(args):
     input_path, output_path = args
-    process_single_file(input_path, output_path)
+    process_single_file(input_path, output_path, verbose=False)
 
 
 def process_folder(input_folder, output_folder=None, replace=False):
@@ -76,6 +88,7 @@ def process_folder(input_folder, output_folder=None, replace=False):
 
     for (input_path, output_path), success in zip(tasks, results):
         if success:
-            print(f"{input_path} -> {output_path} ✅ done")
+            # print(f"{input_path} -> {output_path} ✅ done")
+            pass
         else:
-            print(f"{input_path} -> {output_path} ❌ error")
+            logger.error("%s -> %s ❌ error", input_path, output_path)
