@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "appledict2semantic"
-version = "1.0.1"
+version = "1.1.0"
 authors = [
   { name="yell0wsuit" },
 ]
@@ -26,6 +26,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/yell0wsuit/appledict2semantic"
 Issues = "https://github.com/yell0wsuit/appledict2semantic/issues"
+Changelog = "https://github.com/yell0wsuit/appledict2semantic/blob/main/changelog.md"
 
 [project.scripts]
 appledict2semantic = "appledict2semantic.main:main"
