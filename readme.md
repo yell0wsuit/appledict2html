@@ -57,19 +57,19 @@ From there, use [this script](https://gist.github.com/yell0wsuit/c25632f7c863d19
 - Converts a single Apple Dictionary HTML file to semantic HTML:
 
   ```bash
-  python appledict2semantic --single input.html output.html
+  appledict2semantic --single input.html output.html
   ```
 
 - Processes all .html files in `input_folder`, saving results to `output_folder`:
 
   ```bash
-  python appledict2semantic --multiple input_folder output_folder
+  appledict2semantic --multiple input_folder output_folder
   ```
 
 - Processes all .html files in `input_folder`, replacing the original files:
 
   ```bash
-  python appledict2semantic --multiple input_folder --replace
+  appledict2semantic --multiple input_folder --replace
   ```
 
   You will need to confirm the action.
