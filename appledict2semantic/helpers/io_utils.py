@@ -74,7 +74,7 @@ def process_folder(input_folder, output_folder=None, replace=False):
                 )
             os.makedirs(output_folder, exist_ok=True)
             base, ext = os.path.splitext(fname)
-            output_path = os.path.join(output_folder, f"{base}_processed{ext}")
+            output_path = os.path.join(output_folder, f"{base}-htmlprocessed{ext}")
         tasks.append((input_path, output_path))
 
     with Pool(cpu_count()) as pool:

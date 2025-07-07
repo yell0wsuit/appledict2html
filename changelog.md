@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.2] - 2025-07-07
+
+### v1.1.2 fixes
+
+- Change output file name to include `-htmlprocessed` suffix. This is to avoid confusion with the original file.
+
 ## [1.1.1] - 2025-07-07
 
 ### v1.1.1 changes
