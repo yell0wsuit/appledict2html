@@ -48,6 +48,7 @@ excluded_classes = {
     "la",  # latin language,
     "date",
     "df",  # definition
+    "tg_df",
     "dg",  # related to "date" class
     "x_xoLblBlk",
     "etym",
@@ -62,17 +63,18 @@ excluded_classes = {
     "hg",  # heading and IPA parent
     "x_xh0",
     "hw",  # headword
+    "pr",  # pronunciation
     "prx",  # pronunciation
     "t_IPA",
-    "ph", # pronunciation
-    "tg_ph", # pronunciation
+    "ph",  # pronunciation
+    "tg_ph",  # pronunciation
     "infg",  # inflected form
     "lbl",  # the colon after label
     "subEntryBlock",
     "tg_subEntryBlock",
     "subEntry",
     "posg",  # part of speech
-    "pos", # part of speech
+    "pos",  # part of speech
     "tg_pos",
     "q",
     "tg_q",
@@ -80,10 +82,20 @@ excluded_classes = {
     "sg",
     # "tg_sg", # empty span, ignore
     "x_blk",
-    "se1", # sense / meaning
+    "se1",  # sense / meaning
     "x_xd0",
     "x_xdt",
     "tg_msDict",
+    "sj",
+    "tg_eg",  # period
+    "tg_etym",
+    "tx",
+    "vg",
+    "tg_vg",  # parenthesis
+    "tg_fg",  # parenthesis
+    "tg_infg",  # parenthesis
+    "trans",  # translation
+    "tg_gg",  # square bracket
 }
 
 

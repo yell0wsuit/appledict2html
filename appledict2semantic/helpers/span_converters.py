@@ -32,6 +32,7 @@ APPLE_STYLE_MAP = {
     "sy": {"tag": "em"},
     "nu": {"tag": "sup"},
     "dn": {"tag": "sub"},
+    "work": {"tag": ["em", "code"]},
 }
 
 # Convert multiple classes to semantic tags
