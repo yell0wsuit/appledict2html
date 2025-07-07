@@ -7,6 +7,7 @@ from bs4.element import NavigableString
 def cleanup_stuff(soup: BeautifulSoup):
     """Cleanup stuff"""
     remove_bullet_spans(soup)
+    convert_inline_origin_block(soup)
     convert_origin_block(soup)
     convert_derivatives_block(soup)
     convert_usage_note_block(soup)
@@ -158,6 +159,38 @@ def convert_phrase_origin_to_p(soup: BeautifulSoup):
             span.attrs.clear()
 
 
+def convert_inline_origin_block(soup: BeautifulSoup):
+    """
+    Convert `<span class="etym x_xot">` to `<section class="origin_block origin_inline">` and
+    `<span class="gp ty_label tg_etym">` to `<p class="origin_title">`.
+    """
+    # Find all etym spans with x_xot class (these are inline origin blocks)
+    etym_spans = soup.find_all("span", class_="etym")
+
+    for span in etym_spans:
+        if not isinstance(span, Tag):
+            continue
+        class_set = set(span.get("class") or [])
+        if "x_xot" in class_set:
+            # Convert the main span to section
+            span.name = "section"
+            span["class"] = ["origin_block", "origin_inline"]  # type: ignore
+
+            # Convert the title span within this section
+            for inner_span in span.find_all("span"):
+                if not isinstance(inner_span, Tag):
+                    continue
+                inner_class_set = set(inner_span.get("class") or [])
+                if {"gp", "ty_label", "tg_etym"}.issubset(inner_class_set):
+                    inner_span.name = "p"
+                    inner_span["class"] = ["origin_title"]  # type: ignore
+
+            # Remove other attributes after processing children
+            for attr in ["id", "role"]:
+                if attr in span.attrs:
+                    del span.attrs[attr]
+
+
 def inject_hw_linebreaks(soup: BeautifulSoup):
     """Append `[linebreaks]` after the headword text in `<span class='hw'>`
     if linebreaks is valid."""
@@ -300,6 +333,7 @@ exclude_classes = {
     "usage_block",
     "usage_title",
     "note_block",
+    "origin_inline",
 }
 attrs_to_remove = ["id", "linebreaks"]
 

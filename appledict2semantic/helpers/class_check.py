@@ -105,6 +105,15 @@ excluded_classes = {
     "x_xo1",
     "x_xo2",
     "x_xo2sub",
+    "x_xo3",
+    "x_xoh",
+    "xrlabelGroup",
+    "xrlabel",
+    "tg_xrlabel",
+    "x_xot",
+    "tg_xr",  # supscript
+    "xrg",
+    "xr",
 }
 
 

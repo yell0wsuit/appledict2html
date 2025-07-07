@@ -41,10 +41,9 @@ def group_xo0_blocks(soup: BeautifulSoup):
 
 def convert_xo1_to_list(soup: BeautifulSoup):
     """
-    Convert `.x_xo1` spans inside `.subEntryBlock` into `<div class="subEntry">` blocks.
-    Each `.x_xo2` child becomes a `<li>` inside a nested `<ul>`.
-
-    Outside `.subEntryBlock`, `.x_xo1` spans are left unchanged.
+    Convert `<span class="x_xo1">` to `<div>` and `<ul>`, and convert
+    `<span class="x_xo2">` to `<li>`.
+    Preserve all other children (including `.etym.x_xot`).
     """
     for xo1 in soup.find_all("span", class_="x_xo1"):
         if not isinstance(xo1, Tag):
@@ -55,33 +54,31 @@ def convert_xo1_to_list(soup: BeautifulSoup):
             continue
 
         div = soup.new_tag("div")
+        ul = soup.new_tag("ul")
+        new_children = []
+        ul_insert_index = None
 
-        # Extract the label (x_xoh or l)
-        xoh = xo1.find("span", class_="x_xoh") or xo1.find("span", class_="l")
-        if xoh:
-            div.append(xoh.extract())
-        else:
-            div.string = xo1.get_text(strip=True)
+        for i, child in enumerate(list(xo1.contents)):
+            if isinstance(child, Tag) and "x_xo2" in (child.get("class") or []):
+                li = soup.new_tag("li")
+                li.append(child.extract())
+                ul.append(li)
+                if ul_insert_index is None:
+                    ul_insert_index = len(new_children)
+            else:
+                new_children.append(
+                    child.extract() if isinstance(child, Tag) else child
+                )
 
-        # Create nested list of .x_xo2 spans
-        nested_ul = soup.new_tag("ul")
-        for xo2 in xo1.find_all("span", class_="x_xo2", recursive=False):
-            if not isinstance(xo2, Tag):
-                continue
+        # Insert <ul> at the position of the first .x_xo2, or at the end if none
+        if ul.contents:
+            if ul_insert_index is not None:
+                new_children.insert(ul_insert_index, ul)
+            else:
+                new_children.append(ul)
 
-            # Skip if xo2 has no visible content
-            if not xo2.get_text(strip=True) and not xo2.find(
-                True
-            ):  # no text, no children
-                xo2.decompose()
-                continue
-
-            li2 = soup.new_tag("li")
-            li2.append(xo2.extract())
-            nested_ul.append(li2)
-
-        if nested_ul.contents:
-            div.append(nested_ul)
+        for child in new_children:
+            div.append(child)
 
         xo1.replace_with(div)
 
