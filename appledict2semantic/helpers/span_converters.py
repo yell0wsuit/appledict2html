@@ -28,6 +28,8 @@ APPLE_STYLE_MAP = {
     "ff": {"tag": ["em", "strong"]},
     "gg": {"tag": "em"},
     "subEnt": {"tag": "sub"},
+    "inf": {"tag": "strong"},
+    "sy": {"tag": "em"},
 }
 
 # Convert multiple classes to semantic tags
@@ -76,6 +78,20 @@ def convert_span_styles(soup: BeautifulSoup):
                     break
 
 
+def is_inside_eg(span):
+    """Check if the span is inside an "eg" class"""
+    parent = span.find_parent()
+    while parent is not None:
+        if isinstance(parent, Tag):
+            parent_classes = parent.get("class") or []
+            if "eg" in parent_classes:
+                return True
+            parent = parent.find_parent()
+        else:
+            break
+    return False
+
+
 def convert_apple_span_styles(soup: BeautifulSoup):
     """Convert Apple-specific span classes into semantic tags (e.g., `<i>`, `<b>`, `<u>`)"""
 
@@ -91,6 +107,32 @@ def convert_apple_span_styles(soup: BeautifulSoup):
         apple_classes = [cls for cls in classes if cls in APPLE_STYLE_MAP]
 
         if apple_classes:
+            # Special case: if class is "gg" and inside "eg", use <code> instead of <em>
+            if "gg" in apple_classes:
+                if is_inside_eg(span):
+                    tag_names = ["code"]
+                    attrs = {}
+                    new = wrap_with_tags_preserving_content(
+                        soup, span, tag_names, attrs
+                    )
+                    if new is not None:
+                        span.replace_with(new)
+                else:
+                    # Not inside "eg", use default mapping
+                    entry = APPLE_STYLE_MAP["gg"]
+                    tag_names = (
+                        entry["tag"]
+                        if isinstance(entry["tag"], list)
+                        else [entry["tag"]]
+                    )
+                    attrs = entry.get("attrs", {})
+                    new = wrap_with_tags_preserving_content(
+                        soup, span, tag_names, attrs
+                    )
+                    if new is not None:
+                        span.replace_with(new)
+                continue  # Skip further processing for this span
+
             # Process only the first matching Apple class
             cls = apple_classes[0]
             entry = APPLE_STYLE_MAP[cls]
