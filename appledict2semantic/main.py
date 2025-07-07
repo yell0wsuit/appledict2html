@@ -6,7 +6,7 @@ appropriate semantic HTML tags and structural markup.
 
 import argparse
 
-from .helpers.io_utils import process_single_file, process_folder
+from appledict2semantic.helpers.io_utils import process_single_file, process_folder
 
 
 def main():
