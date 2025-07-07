@@ -1,0 +1,62 @@
+name: Publish Python 🐍 distribution 📦 to PyPI
+
+on:
+    push:
+        branches:
+            - main
+        tags:
+            - "*"
+
+jobs:
+    build:
+        name: Build distribution 📦
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@main
+              with:
+                  persist-credentials: false
+            - name: Set up Python
+              uses: actions/setup-python@main
+              with:
+                  python-version: "3.x"
+                  cache: "pip"
+            - name: Install pypa/build
+              run: >-
+                  python3 -m
+                  pip install
+                  build
+                  --user
+            - name: Build a binary wheel and a source tarball
+              run: python3 -m build
+            - name: Store the distribution packages
+              uses: actions/upload-artifact@main
+              with:
+                  name: python-package-distributions
+                  path: dist/
+
+    publish-to-pypi:
+        name: >-
+            Publish Python 🐍 distribution 📦 to PyPI
+         # && contains(github.event.head_commit.modified, 'pyproject.toml') to be added for > v1.0.0
+        if: |
+            (
+              github.ref == 'refs/heads/main'
+            )
+        needs:
+            - build
+        runs-on: ubuntu-latest
+        environment:
+            name: pypi
+            url: https://pypi.org/p/appledict2semantic
+        permissions:
+            id-token: write # IMPORTANT: mandatory for trusted publishing
+
+        steps:
+            - name: Download all the dists
+              uses: actions/download-artifact@main
+              with:
+                  name: python-package-distributions
+                  path: dist/
+            - name: Publish distribution 📦 to PyPI
+              uses: pypa/gh-action-pypi-publish@release/v1

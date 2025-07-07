@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "appledict2semantic"
+version = "1.0.0"
+authors = [
+  { name="yell0wsuit" },
+]
+description = "Convert Apple Dictionary HTML `<span>`s into semantic, readable HTML. Removes the dependency on CSS styles by converting span class names into appropriate semantic HTML tags and structural markup."
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [
+  "beautifulsoup4",
+  "lxml",
+  "tqdm",
+]
+
+[project.urls]
+Homepage = "https://github.com/yell0wsuit/appledict2semantic"
+Issues = "https://github.com/yell0wsuit/appledict2semantic/issues"
+
+[tool.hatch.build]
+sources = ["appledict2semantic"]
+
+[project.scripts]
+appledict2semantic = "appledict2semantic.main:main"
