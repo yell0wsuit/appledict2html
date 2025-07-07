@@ -4,6 +4,20 @@ from bs4 import BeautifulSoup, Tag
 from bs4.element import NavigableString
 
 
+def cleanup_stuff(soup: BeautifulSoup):
+    """Cleanup stuff"""
+    remove_bullet_spans(soup)
+    convert_origin_block(soup)
+    convert_derivatives_block(soup)
+    convert_usage_note_block(soup)
+    inject_hw_linebreaks(soup)
+    remove_empty_tags(soup)
+    convert_heading_spans_to_p(soup)
+    convert_phrasal_verbs_block(soup)
+    convert_phrasal_block(soup)
+    unwrap_span(soup)
+
+
 def remove_bullet_spans(soup: BeautifulSoup):
     """Remove all bullet spans since we have `<li>` for that"""
     target_classes = {"gp", "sn", "tg_msDict"}
@@ -37,7 +51,7 @@ def convert_origin_block(soup: BeautifulSoup):
             continue
 
         # Change the parent class
-        etym_div["class"] = ["origin_block"] # type: ignore
+        etym_div["class"] = ["origin_block"]  # type: ignore
 
         for child in etym_div.find_all("span", recursive=True):
             if not isinstance(child, Tag):
@@ -70,7 +84,7 @@ def convert_derivatives_block(soup: BeautifulSoup):
             continue
 
         # Replace classes with "derivatives_block"
-        div["class"] = ["derivatives_block"] # type: ignore
+        div["class"] = ["derivatives_block"]  # type: ignore
 
         for span in div.find_all("span", recursive=True):
             if not isinstance(span, Tag):
@@ -101,7 +115,7 @@ def convert_usage_note_block(soup: BeautifulSoup):
             continue
 
         # Rename the div class
-        note_div["class"] = ["usage_block"] # type: ignore
+        note_div["class"] = ["usage_block"]  # type: ignore
 
         for span in note_div.find_all("span", recursive=True):
             if not isinstance(span, Tag):
@@ -162,3 +176,83 @@ def convert_heading_spans_to_p(soup: BeautifulSoup):
                 p.append(span.contents[0])  # moves content instead of copying
 
             span.replace_with(p)
+
+
+def convert_phrasal_verbs_block(soup: BeautifulSoup):
+    """
+    Convert `<div class="subEntryBlock x_xo0 t_phrasalVerbs">` to
+    `<div class="phrasalverbs_block">`, and transform children:
+      - `<span class="gp x_xoLblBlk ty_label tg_subEntryBlock">` → `<p class="phrasalverbs_title">`
+    """
+    for div in soup.find_all("div", class_="subEntryBlock"):
+        if not isinstance(div, Tag):
+            continue
+
+        class_list = div.get("class") or []
+        if "x_xo0" not in class_list or "t_phrasalVerbs" not in class_list:
+            continue
+
+        # Replace classes with "phrasalverbs_block"
+        div["class"] = ["phrasalverbs_block"]  # type: ignore
+
+        for span in div.find_all("span", recursive=True):
+            if not isinstance(span, Tag):
+                continue
+
+            classes = set(span.get("class") or [])
+
+            if {"gp", "x_xoLblBlk", "ty_label", "tg_subEntryBlock"}.issubset(classes):
+                span.name = "p"
+                span.attrs = {"class": "phrasalverbs_title"}
+
+
+def convert_phrasal_block(soup: BeautifulSoup):
+    """
+    Convert `<div class="subEntryBlock x_xo0 t_phrases">` to
+    `<div class="phrases_block">`, and transform children:
+      - `<span class="gp x_xoLblBlk ty_label tg_subEntryBlock">` → `<p class="phrases_title">`
+    """
+    for div in soup.find_all("div", class_="subEntryBlock"):
+        if not isinstance(div, Tag):
+            continue
+
+        class_list = div.get("class") or []
+        if "x_xo0" not in class_list or "t_phrases" not in class_list:
+            continue
+
+        # Replace classes with "phrasalverbs_block"
+        div["class"] = ["phrases_block"]  # type: ignore
+
+        for span in div.find_all("span", recursive=True):
+            if not isinstance(span, Tag):
+                continue
+
+            classes = set(span.get("class") or [])
+
+            if {"gp", "x_xoLblBlk", "ty_label", "tg_subEntryBlock"}.issubset(classes):
+                span.name = "p"
+                span.attrs = {"class": "phrases_title"}
+
+
+def unwrap_span(soup: BeautifulSoup):
+    """
+    Unwrap leftover tags to clean up the HTML.
+    """
+    for span in soup.find_all("span"):
+        if not isinstance(span, Tag):
+            continue
+        span.unwrap()
+
+    for d_prn in soup.find_all("d:prn"):
+        d_prn.decompose()
+
+    for d_def in soup.find_all("d:def"):
+        d_def.decompose()
+
+    for d_pos in soup.find_all("d:pos"):
+        d_pos.decompose()
+
+    for d_entry in soup.find_all("d:entry"):
+        if not isinstance(d_entry, Tag):
+            continue
+        d_entry.unwrap()
