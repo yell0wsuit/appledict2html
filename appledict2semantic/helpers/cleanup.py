@@ -37,7 +37,7 @@ def convert_origin_block(soup: BeautifulSoup):
             continue
 
         # Change the parent class
-        etym_div["class"] = ["origin_block"]
+        etym_div["class"] = ["origin_block"] # type: ignore
 
         for child in etym_div.find_all("span", recursive=True):
             if not isinstance(child, Tag):
@@ -70,7 +70,7 @@ def convert_derivatives_block(soup: BeautifulSoup):
             continue
 
         # Replace classes with "derivatives_block"
-        div["class"] = ["derivatives_block"]
+        div["class"] = ["derivatives_block"] # type: ignore
 
         for span in div.find_all("span", recursive=True):
             if not isinstance(span, Tag):
@@ -101,7 +101,7 @@ def convert_usage_note_block(soup: BeautifulSoup):
             continue
 
         # Rename the div class
-        note_div["class"] = ["usage_block"]
+        note_div["class"] = ["usage_block"] # type: ignore
 
         for span in note_div.find_all("span", recursive=True):
             if not isinstance(span, Tag):

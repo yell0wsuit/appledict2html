@@ -56,6 +56,8 @@ def convert_span_styles(soup: BeautifulSoup):
                     entry["tag"] if isinstance(entry["tag"], list) else [entry["tag"]]
                 )
                 attrs = entry.get("attrs", {})
+                if not isinstance(attrs, dict):
+                    attrs = {}
                 new = wrap_with_tags(soup, span, tag_names, attrs)
                 span.replace_with(new)
                 break

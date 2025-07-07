@@ -18,7 +18,7 @@ def process_single_file(input_path, output_path):
             f.write(html_out)
         print(f"{input_path} -> {output_path} ✅ done")
         return True
-    except Exception:
+    except (OSError, IOError, ValueError):
         print(f"{input_path} -> {output_path} ❌ error")
         print(traceback.format_exc())
         return False
