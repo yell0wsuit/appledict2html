@@ -48,24 +48,42 @@ excluded_classes = {
     "la",  # latin language,
     "date",
     "df",  # definition
-    "dg", # related to "date" class
+    "dg",  # related to "date" class
     "x_xoLblBlk",
     "etym",
     "t_derivatives",
     "t_phrasalVerbs",
     "t_phrases",
-    "eg", # example
-    "frac", # fraction
-    "fg", # phrase
-    "ge", # regional language (British English, American English, etc.)
-    "reg", # language register
-    "hg", # heading and IPA parent
+    "eg",  # example
+    "frac",  # fraction
+    "fg",  # phrase
+    "ge",  # regional language (British English, American English, etc.)
+    "reg",  # language register
+    "hg",  # heading and IPA parent
     "x_xh0",
-    "hw", # headword
-    "prx", # pronunciation
+    "hw",  # headword
+    "prx",  # pronunciation
     "t_IPA",
-    "infg", # inflected form
-    "lbl", # the colon after label
+    "ph", # pronunciation
+    "tg_ph", # pronunciation
+    "infg",  # inflected form
+    "lbl",  # the colon after label
+    "subEntryBlock",
+    "tg_subEntryBlock",
+    "subEntry",
+    "posg",  # part of speech
+    "pos", # part of speech
+    "tg_pos",
+    "q",
+    "tg_q",
+    "gp",
+    "sg",
+    # "tg_sg", # empty span, ignore
+    "x_blk",
+    "se1", # sense / meaning
+    "x_xd0",
+    "x_xdt",
+    "tg_msDict",
 }
 
 
@@ -82,6 +100,9 @@ def find_unknown_classes_in_file(
         for tag in soup.find_all(class_=True):
             if isinstance(tag, Tag):
                 for cls in tag.get("class") or []:
+                    # Ignore tags with empty or whitespace-only content
+                    if not tag.text.strip():
+                        continue
                     if cls not in known_classes_set and cls not in excluded_classes_set:
                         class_to_files.setdefault(cls, set()).add(file_path)
     return class_to_files
