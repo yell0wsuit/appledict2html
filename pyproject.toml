@@ -27,8 +27,5 @@ dependencies = [
 Homepage = "https://github.com/yell0wsuit/appledict2semantic"
 Issues = "https://github.com/yell0wsuit/appledict2semantic/issues"
 
-[tool.hatch.build]
-sources = ["appledict2semantic"]
-
 [project.scripts]
 appledict2semantic = "appledict2semantic.main:main"
