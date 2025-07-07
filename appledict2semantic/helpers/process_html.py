@@ -26,4 +26,4 @@ def process_html(result: str) -> str:
     convert_subsenses_to_list(soup)
     convert_senses_to_list(soup)
     cleanup_stuff(soup)
-    return str(soup.prettify())
+    return "<!DOCTYPE html>\n" + str(soup)
