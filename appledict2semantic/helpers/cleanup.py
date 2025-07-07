@@ -16,6 +16,7 @@ def cleanup_stuff(soup: BeautifulSoup):
     convert_phrasal_verbs_block(soup)
     convert_phrasal_block(soup)
     unwrap_span(soup)
+    clean_attributes(soup)
 
 
 def remove_bullet_spans(soup: BeautifulSoup):
@@ -256,3 +257,39 @@ def unwrap_span(soup: BeautifulSoup):
         if not isinstance(d_entry, Tag):
             continue
         d_entry.unwrap()
+
+
+exclude_classes = {
+    "phrases_block",
+    "phrases_title",
+    "phrasalverbs_block",
+    "phrasalverbs_title",
+    "origin_block",
+    "origin_title",
+    "derivatives_block",
+    "derivatives_title",
+    "usage_block",
+    "usage_title",
+}
+attrs_to_remove = ["id", "linebreaks"]
+
+
+def clean_attributes(soup: BeautifulSoup):
+    """
+    Remove specified attributes from all tags in the soup.
+    If attrs_to_remove is None, remove 'id' and 'class' by default.
+    """
+    for tag in soup.find_all(True):
+        if not isinstance(tag, Tag):
+            continue
+        # Handle 'class' attribute with exclude list
+        if "class" in tag.attrs:
+            kept_classes = [cls for cls in tag["class"] if cls in exclude_classes]
+            if kept_classes:
+                tag["class"] = " ".join(kept_classes)
+            else:
+                del tag["class"]
+        # Remove other specified attributes
+        for attr in attrs_to_remove:
+            if attr in tag.attrs:
+                del tag.attrs[attr]
