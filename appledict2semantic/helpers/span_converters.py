@@ -30,6 +30,8 @@ APPLE_STYLE_MAP = {
     "subEnt": {"tag": "sub"},
     "inf": {"tag": "strong"},
     "sy": {"tag": "em"},
+    "nu": {"tag": "sup"},
+    "dn": {"tag": "sub"},
 }
 
 # Convert multiple classes to semantic tags

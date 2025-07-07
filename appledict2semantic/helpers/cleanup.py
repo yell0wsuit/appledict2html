@@ -15,6 +15,7 @@ def cleanup_stuff(soup: BeautifulSoup):
     convert_heading_spans_to_p(soup)
     convert_phrasal_verbs_block(soup)
     convert_phrasal_block(soup)
+    convert_note_block(soup)
     unwrap_span(soup)
     clean_attributes(soup)
     ensure_space_after_tags(soup, ["strong", "em"])
@@ -129,6 +130,17 @@ def convert_usage_note_block(soup: BeautifulSoup):
             if {"lbl", "x_blk"}.issubset(classes):
                 span.name = "p"
                 span["class"] = ["usage_title"]  # type: ignore
+
+def convert_note_block(soup: BeautifulSoup):
+    """
+    Convert `<section class="note">` to `<section class="note_block">`.
+    """
+    for note_span in soup.find_all("span", class_="note"):
+        if not isinstance(note_span, Tag):
+            continue
+
+        note_span["class"] = ["note_block"]  # type: ignore
+        note_span.name = "section"
 
 
 def inject_hw_linebreaks(soup: BeautifulSoup):
@@ -272,6 +284,7 @@ exclude_classes = {
     "derivatives_title",
     "usage_block",
     "usage_title",
+    "note_block",
 }
 attrs_to_remove = ["id", "linebreaks"]
 
