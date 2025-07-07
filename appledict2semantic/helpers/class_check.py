@@ -96,6 +96,15 @@ excluded_classes = {
     "tg_infg",  # parenthesis
     "trans",  # translation
     "tg_gg",  # square bracket
+    "tg_lg",  # comma
+    "tg_reg",  # comma
+    "tg_nu",  # slash (fraction)
+    "tg_tr",  # quotation mark
+    "tg_xrg",  # colon
+    "x_xo0",
+    "x_xo1",
+    "x_xo2",
+    "x_xo2sub",
 }
 
 

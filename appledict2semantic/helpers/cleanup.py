@@ -16,6 +16,7 @@ def cleanup_stuff(soup: BeautifulSoup):
     convert_phrasal_verbs_block(soup)
     convert_phrasal_block(soup)
     convert_note_block(soup)
+    convert_phrase_origin_to_p(soup)
     unwrap_span(soup)
     clean_attributes(soup)
     ensure_space_after_tags(soup, ["strong", "em"])
@@ -131,6 +132,7 @@ def convert_usage_note_block(soup: BeautifulSoup):
                 span.name = "p"
                 span["class"] = ["usage_title"]  # type: ignore
 
+
 def convert_note_block(soup: BeautifulSoup):
     """
     Convert `<section class="note">` to `<section class="note_block">`.
@@ -141,6 +143,19 @@ def convert_note_block(soup: BeautifulSoup):
 
         note_span["class"] = ["note_block"]  # type: ignore
         note_span.name = "section"
+
+
+def convert_phrase_origin_to_p(soup: BeautifulSoup):
+    """
+    Convert <span class="etym x_xo3"> to <p> and remove its classes.
+    """
+    for span in soup.find_all("span", class_="etym"):
+        if not isinstance(span, Tag):
+            continue
+        class_set = set(span.get("class") or [])
+        if "x_xo3" in class_set:
+            span.name = "p"
+            span.attrs.clear()
 
 
 def inject_hw_linebreaks(soup: BeautifulSoup):
