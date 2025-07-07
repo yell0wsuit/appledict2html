@@ -120,7 +120,7 @@ def convert_senses_to_list(soup: BeautifulSoup):
         if not isinstance(se1, Tag):
             continue
 
-        convert_tag(se1, "div")
+        convert_tag(se1, "section")
 
         # Convert parts of speech
         for pos_block in se1.find_all("span", class_="x_xdh"):

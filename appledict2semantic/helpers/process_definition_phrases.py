@@ -34,7 +34,7 @@ def group_xo0_blocks(soup: BeautifulSoup):
         for child in siblings:
             xo0.append(child)
 
-        xo0.name = "div"
+        xo0.name = "section"
         if original_classes:
             xo0["class"] = original_classes
 

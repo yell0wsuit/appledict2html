@@ -18,6 +18,7 @@ def cleanup_stuff(soup: BeautifulSoup):
     unwrap_span(soup)
     clean_attributes(soup)
     ensure_space_after_tags(soup, ["strong", "em"])
+    strip_title_whitespace(soup)
 
 
 def remove_bullet_spans(soup: BeautifulSoup):
@@ -37,14 +38,14 @@ def remove_bullet_spans(soup: BeautifulSoup):
 
 def convert_origin_block(soup: BeautifulSoup):
     """
-    Convert `<div class="etym x_xo0">` to `<div class="origin_block">`,
+    Convert `<section class="etym x_xo0">` to `<section class="origin_block">`,
     and convert child spans as follows:
       - `<span class="x_xo1">` → `<p>`
       - `<span class="gp x_xoLblBlk ty_label tg_etym">` → `<p class="origin_title">`
 
     Leaves other content unchanged.
     """
-    for etym_div in soup.find_all("div", class_="etym"):
+    for etym_div in soup.find_all("section", class_="etym"):
         if not isinstance(etym_div, Tag):
             continue
 
@@ -67,17 +68,17 @@ def convert_origin_block(soup: BeautifulSoup):
 
             elif {"gp", "x_xoLblBlk", "ty_label", "tg_etym"}.issubset(child_classes):
                 child.name = "p"
-                child.attrs = {"class": "origin_title"}
+                child["class"] = ["origin_title"]  # type: ignore
 
 
 def convert_derivatives_block(soup: BeautifulSoup):
     """
-    Convert `<div class="subEntryBlock x_xo0 t_derivatives">` to `<div class="derivatives_block">`,
+    Convert `<section class="subEntryBlock x_xo0 t_derivatives">` to `<section class="derivatives_block">`,
     and transform children:
       - `<span class="gp x_xoLblBlk ty_label tg_subEntryBlock">` → `<p class="derivatives_title">`
       - `<span class="x_xoh">` → `<p>`
     """
-    for div in soup.find_all("div", class_="subEntryBlock"):
+    for div in soup.find_all("section", class_="subEntryBlock"):
         if not isinstance(div, Tag):
             continue
 
@@ -96,7 +97,7 @@ def convert_derivatives_block(soup: BeautifulSoup):
 
             if {"gp", "x_xoLblBlk", "ty_label", "tg_subEntryBlock"}.issubset(classes):
                 span.name = "p"
-                span.attrs = {"class": "derivatives_title"}
+                span["class"] = ["derivatives_title"]  # type: ignore
 
             elif "x_xoh" in classes:
                 span.name = "p"
@@ -105,10 +106,10 @@ def convert_derivatives_block(soup: BeautifulSoup):
 
 def convert_usage_note_block(soup: BeautifulSoup):
     """
-    Convert `<div class="note x_xo0">` to `<div class="usage_block">`,
+    Convert `<section class="note x_xo0">` to `<section class="usage_block">`,
     and convert child `<span class="lbl x_blk">` to `<p class="usage_title">`.
     """
-    for note_div in soup.find_all("div", class_="note"):
+    for note_div in soup.find_all("section", class_="note"):
         if not isinstance(note_div, Tag):
             continue
 
@@ -127,7 +128,7 @@ def convert_usage_note_block(soup: BeautifulSoup):
 
             if {"lbl", "x_blk"}.issubset(classes):
                 span.name = "p"
-                span.attrs = {"class": "usage_title"}
+                span["class"] = ["usage_title"]  # type: ignore
 
 
 def inject_hw_linebreaks(soup: BeautifulSoup):
@@ -182,11 +183,11 @@ def convert_heading_spans_to_p(soup: BeautifulSoup):
 
 def convert_phrasal_verbs_block(soup: BeautifulSoup):
     """
-    Convert `<div class="subEntryBlock x_xo0 t_phrasalVerbs">` to
-    `<div class="phrasalverbs_block">`, and transform children:
+    Convert `<section class="subEntryBlock x_xo0 t_phrasalVerbs">` to
+    `<section class="phrasalverbs_block">`, and transform children:
       - `<span class="gp x_xoLblBlk ty_label tg_subEntryBlock">` → `<p class="phrasalverbs_title">`
     """
-    for div in soup.find_all("div", class_="subEntryBlock"):
+    for div in soup.find_all("section", class_="subEntryBlock"):
         if not isinstance(div, Tag):
             continue
 
@@ -205,16 +206,16 @@ def convert_phrasal_verbs_block(soup: BeautifulSoup):
 
             if {"gp", "x_xoLblBlk", "ty_label", "tg_subEntryBlock"}.issubset(classes):
                 span.name = "p"
-                span.attrs = {"class": "phrasalverbs_title"}
+                span["class"] = ["phrasalverbs_title"]  # type: ignore
 
 
 def convert_phrasal_block(soup: BeautifulSoup):
     """
-    Convert `<div class="subEntryBlock x_xo0 t_phrases">` to
-    `<div class="phrases_block">`, and transform children:
+    Convert `<section class="subEntryBlock x_xo0 t_phrases">` to
+    `<section class="phrases_block">`, and transform children:
       - `<span class="gp x_xoLblBlk ty_label tg_subEntryBlock">` → `<p class="phrases_title">`
     """
-    for div in soup.find_all("div", class_="subEntryBlock"):
+    for div in soup.find_all("section", class_="subEntryBlock"):
         if not isinstance(div, Tag):
             continue
 
@@ -233,7 +234,7 @@ def convert_phrasal_block(soup: BeautifulSoup):
 
             if {"gp", "x_xoLblBlk", "ty_label", "tg_subEntryBlock"}.issubset(classes):
                 span.name = "p"
-                span.attrs = {"class": "phrases_title"}
+                span["class"] = ["phrases_title"]  # type: ignore
 
 
 def unwrap_span(soup: BeautifulSoup):
@@ -287,9 +288,10 @@ def clean_attributes(soup: BeautifulSoup):
         if "class" in tag.attrs:
             kept_classes = [cls for cls in tag["class"] if cls in exclude_classes]
             if kept_classes:
-                tag["class"] = " ".join(kept_classes)
+                tag["class"] = kept_classes  # type: ignore
             else:
                 del tag["class"]
+
         # Remove other specified attributes
         for attr in attrs_to_remove:
             if attr in tag.attrs:
@@ -312,3 +314,26 @@ def ensure_space_after_tags(soup: BeautifulSoup, tag_names):
                 # Insert a space at the start of the next sibling
                 tag.insert_after(NavigableString(" " + next_sibling))
                 next_sibling.extract()
+
+
+def strip_title_whitespace(soup: BeautifulSoup):
+    """
+    Strips leading/trailing whitespace from the text of all *_title tags.
+    """
+    title_classes = [
+        "usage_title",
+        "origin_title",
+        "derivatives_title",
+        "phrases_title",
+        "phrasalverbs_title",
+    ]
+    for cls in title_classes:
+        for tag in soup.find_all(class_=cls):
+            if not isinstance(tag, Tag):
+                continue
+            # Only strip if the tag contains a single NavigableString
+            if len(tag.contents) == 1 and isinstance(tag.contents[0], NavigableString):
+                original = tag.contents[0]
+                stripped = original.strip()
+                if stripped != original:
+                    tag.contents[0].replace_with(NavigableString(stripped))
