@@ -17,6 +17,7 @@ def cleanup_stuff(soup: BeautifulSoup):
     convert_phrasal_block(soup)
     unwrap_span(soup)
     clean_attributes(soup)
+    ensure_space_after_tags(soup, ["strong", "em"])
 
 
 def remove_bullet_spans(soup: BeautifulSoup):
@@ -293,3 +294,21 @@ def clean_attributes(soup: BeautifulSoup):
         for attr in attrs_to_remove:
             if attr in tag.attrs:
                 del tag.attrs[attr]
+
+
+def ensure_space_after_tags(soup: BeautifulSoup, tag_names):
+    """
+    Ensures there is a space after tags if the next sibling is a letter.
+    """
+    for tag_name in tag_names:
+        for tag in soup.find_all(tag_name):
+            next_sibling = tag.next_sibling
+            if (
+                isinstance(next_sibling, NavigableString)
+                and next_sibling
+                and not next_sibling.startswith(" ")
+                and next_sibling[0].isalpha()
+            ):
+                # Insert a space at the start of the next sibling
+                tag.insert_after(NavigableString(" " + next_sibling))
+                next_sibling.extract()
