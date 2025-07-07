@@ -9,7 +9,7 @@ authors = [
   { name="yell0wsuit" },
 ]
 description = "Convert Apple Dictionary HTML `<span>`s into semantic, readable HTML. Removes the dependency on CSS styles by converting span class names into appropriate semantic HTML tags and structural markup."
-readme = "README.md"
+readme = "readme.md"
 requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
