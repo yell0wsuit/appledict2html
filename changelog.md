@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.3] - 2025-07-08
+
+### v1.2.3 changes
+
+- Replaces `type: ignore` comments with `typing.cast` when assigning to the 'class' attribute of BeautifulSoup tags. This improves type safety and clarity by explicitly casting to the expected `_AttributeValue` type. No functional changes.
+
 ## [1.2.2] - 2025-07-08
 
 ### v1.2.2 changes

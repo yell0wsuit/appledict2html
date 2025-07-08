@@ -76,6 +76,10 @@ For more information about the Apple Dictionary binary format, [see here](https:
 
   You will need to confirm the action.
 
+## Changelog
+
+See [changelog.md](https://github.com/yell0wsuit/appledict2semantic/blob/main/changelog.md) for the latest changes.
+
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/yell0wsuit/appledict2semantic/blob/main/LICENSE) file for details.
