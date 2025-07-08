@@ -213,14 +213,26 @@ def inject_hw_linebreaks(soup: BeautifulSoup):
 
 
 def remove_empty_tags(soup: BeautifulSoup):
-    """Remove all empty tags (no content or only whitespace), excluding `<d:index>`."""
-    for tag in soup.find_all():
-        if (
-            isinstance(tag, Tag)
-            and tag.name != "d:index"
-            and not tag.get_text(strip=True)
-            and not tag.find()  # no child tags
-        ):
+    """Recursively remove all empty tags (no content or only whitespace), excluding <d:index>."""
+
+    def is_effectively_empty(tag):
+        # Only check Tag, not NavigableString
+        if not isinstance(tag, Tag):
+            return True
+        if tag.name == "d:index":
+            return False  # Never remove <d:index>
+        # If tag has text, not empty
+        if tag.get_text(strip=True):
+            return False
+        # If tag has any non-empty child, not empty
+        for child in tag.find_all(recursive=False):
+            if not is_effectively_empty(child):
+                return False
+        return True
+
+    # Work from the bottom up to ensure parents are checked after children
+    for tag in reversed(list(soup.find_all())):
+        if isinstance(tag, Tag) and tag.name != "d:index" and is_effectively_empty(tag):
             tag.decompose()
 
 
