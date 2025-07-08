@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.2] - 2025-07-08
+
+### v1.2.2 changes
+
+- Refactored `remove_empty_tags` to recursively remove empty tags, ensuring that parent tags are only removed if all their children are also empty. This prevents leaving behind empty container tags and better cleans up the HTML structure.
+
 ## [1.2.1] - 2025-07-08
 
 ### v1.2.1 fixes
