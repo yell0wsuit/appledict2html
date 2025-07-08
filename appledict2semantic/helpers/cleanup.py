@@ -1,7 +1,9 @@
 """Module for post-processing the HTML"""
 
+from typing import cast
 from bs4 import BeautifulSoup, Tag
 from bs4.element import NavigableString
+from bs4._typing import _AttributeValue
 
 
 def cleanup_stuff(soup: BeautifulSoup):
@@ -57,7 +59,7 @@ def convert_origin_block(soup: BeautifulSoup):
             continue
 
         # Change the parent class
-        etym_div["class"] = ["origin_block"]  # type: ignore
+        etym_div["class"] = cast(_AttributeValue, ["origin_block"])
 
         for child in etym_div.find_all("span", recursive=True):
             if not isinstance(child, Tag):
@@ -71,7 +73,7 @@ def convert_origin_block(soup: BeautifulSoup):
 
             elif {"gp", "x_xoLblBlk", "ty_label", "tg_etym"}.issubset(child_classes):
                 child.name = "p"
-                child["class"] = ["origin_title"]  # type: ignore
+                child["class"] = cast(_AttributeValue, ["origin_title"])
 
 
 def convert_derivatives_block(soup: BeautifulSoup):
@@ -90,7 +92,7 @@ def convert_derivatives_block(soup: BeautifulSoup):
             continue
 
         # Replace classes with "derivatives_block"
-        div["class"] = ["derivatives_block"]  # type: ignore
+        div["class"] = cast(_AttributeValue, ["derivatives_block"])
 
         for span in div.find_all("span", recursive=True):
             if not isinstance(span, Tag):
@@ -100,7 +102,7 @@ def convert_derivatives_block(soup: BeautifulSoup):
 
             if {"gp", "x_xoLblBlk", "ty_label", "tg_subEntryBlock"}.issubset(classes):
                 span.name = "p"
-                span["class"] = ["derivatives_title"]  # type: ignore
+                span["class"] = cast(_AttributeValue, ["derivatives_title"])
 
             elif "x_xoh" in classes:
                 span.name = "p"
@@ -121,7 +123,7 @@ def convert_usage_note_block(soup: BeautifulSoup):
             continue
 
         # Rename the div class
-        note_div["class"] = ["usage_block"]  # type: ignore
+        note_div["class"] = cast(_AttributeValue, ["usage_block"])
 
         for span in note_div.find_all("span", recursive=True):
             if not isinstance(span, Tag):
@@ -131,7 +133,7 @@ def convert_usage_note_block(soup: BeautifulSoup):
 
             if {"lbl", "x_blk"}.issubset(classes):
                 span.name = "p"
-                span["class"] = ["usage_title"]  # type: ignore
+                span["class"] = cast(_AttributeValue, ["usage_title"])
 
 
 def convert_note_block(soup: BeautifulSoup):
@@ -142,7 +144,7 @@ def convert_note_block(soup: BeautifulSoup):
         if not isinstance(note_span, Tag):
             continue
 
-        note_span["class"] = ["note_block"]  # type: ignore
+        note_span["class"] = cast(_AttributeValue, ["note_block"])
         note_span.name = "section"
 
 
@@ -174,7 +176,7 @@ def convert_inline_origin_block(soup: BeautifulSoup):
         if "x_xot" in class_set:
             # Convert the main span to section
             span.name = "section"
-            span["class"] = ["origin_block", "origin_inline"]  # type: ignore
+            span["class"] = cast(_AttributeValue, ["origin_block", "origin_inline"])
 
             # Convert the title span within this section
             for inner_span in span.find_all("span"):
@@ -183,7 +185,7 @@ def convert_inline_origin_block(soup: BeautifulSoup):
                 inner_class_set = set(inner_span.get("class") or [])
                 if {"gp", "ty_label", "tg_etym"}.issubset(inner_class_set):
                     inner_span.name = "p"
-                    inner_span["class"] = ["origin_title"]  # type: ignore
+                    inner_span["class"] = cast(_AttributeValue, ["origin_title"])
 
             # Remove other attributes after processing children
             for attr in ["id", "role"]:
@@ -268,7 +270,7 @@ def convert_phrasal_verbs_block(soup: BeautifulSoup):
             continue
 
         # Replace classes with "phrasalverbs_block"
-        div["class"] = ["phrasalverbs_block"]  # type: ignore
+        div["class"] = cast(_AttributeValue, ["phrasalverbs_block"])
 
         for span in div.find_all("span", recursive=True):
             if not isinstance(span, Tag):
@@ -278,7 +280,7 @@ def convert_phrasal_verbs_block(soup: BeautifulSoup):
 
             if {"gp", "x_xoLblBlk", "ty_label", "tg_subEntryBlock"}.issubset(classes):
                 span.name = "p"
-                span["class"] = ["phrasalverbs_title"]  # type: ignore
+                span["class"] = cast(_AttributeValue, ["phrasalverbs_title"])
 
 
 def convert_phrasal_block(soup: BeautifulSoup):
@@ -296,7 +298,7 @@ def convert_phrasal_block(soup: BeautifulSoup):
             continue
 
         # Replace classes with "phrasalverbs_block"
-        div["class"] = ["phrases_block"]  # type: ignore
+        div["class"] = cast(_AttributeValue, ["phrases_block"])
 
         for span in div.find_all("span", recursive=True):
             if not isinstance(span, Tag):
@@ -306,7 +308,7 @@ def convert_phrasal_block(soup: BeautifulSoup):
 
             if {"gp", "x_xoLblBlk", "ty_label", "tg_subEntryBlock"}.issubset(classes):
                 span.name = "p"
-                span["class"] = ["phrases_title"]  # type: ignore
+                span["class"] = cast(_AttributeValue, ["phrases_title"])
 
 
 def unwrap_span(soup: BeautifulSoup):
@@ -362,7 +364,7 @@ def clean_attributes(soup: BeautifulSoup):
         if "class" in tag.attrs:
             kept_classes = [cls for cls in tag["class"] if cls in exclude_classes]
             if kept_classes:
-                tag["class"] = kept_classes  # type: ignore
+                tag["class"] = cast(_AttributeValue, kept_classes)
             else:
                 del tag["class"]
 
