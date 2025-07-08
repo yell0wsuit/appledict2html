@@ -42,11 +42,11 @@ def _process_file_worker(args):
 
 
 def process_folder(input_folder, output_folder=None, replace=False):
-    """Process all .html files in a folder (excluding _processed), with multiprocessing and tqdm."""
+    """Process all .html files in a folder (excluding `-htmlprocessed.html`), with multiprocessing and tqdm."""
     files = [
         f
         for f in os.listdir(input_folder)
-        if f.endswith(".html") and not f.endswith("_processed.html")
+        if f.endswith(".html") and not f.endswith("-htmlprocessed.html")
     ]
     if not files:
         print("No HTML files found to process.")

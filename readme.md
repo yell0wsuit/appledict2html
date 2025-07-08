@@ -6,17 +6,17 @@ appledict2semantic is a Python tool to convert Apple Dictionary HTML files into 
 
 Before conversion:
 
-![Before conversion](./assets/dict_before.webp)
+![Before conversion](https://raw.githubusercontent.com/yell0wsuit/appledict2semantic/refs/heads/main/assets/dict_before.webp)
 
 After conversion:
 
-![After conversion](./assets/dict_after.webp)
+![After conversion](https://raw.githubusercontent.com/yell0wsuit/appledict2semantic/refs/heads/main/assets/dict_after.webp)
 
 ## Features
 
 - Span-to-semantic conversion: Converts Apple Dictionary’s `<span class="...">` elements into semantic HTML tags like `<strong>`, `<em>`, `<u>`, and more.
 - Structural transformation: Transforms sense and subsense blocks into nested lists `<ul>`, `<li>` for better readability.
-- Block conversion: Converts etymology, derivatives, and usage note blocks into more meaningful HTML structures. This paves way for further processing, e.g. to convert to Markdown.
+- Block conversion: Converts etymology, phrase (verb), derivatives, and usage note blocks into more meaningful HTML structures. This paves way for further processing, e.g. to convert to Markdown.
 - Cleanup: Removes unnecessary or empty tags, and replaces bullet spans with proper list items.
 - Batch processing: Supports processing single files or entire folders, with optional in-place replacement.
 
@@ -30,11 +30,11 @@ Then install the package from PyPI:
 pip install appledict2semantic
 ```
 
-## Obtain and extract Apple Dictionary HTML files
+## Obtaining and extracting Apple Dictionary HTML files
 
 ### How to obtain
 
-To obtain the Apple Dictionary, first you need to have a macOS.
+To obtain the Apple Dictionary data, first you need to have a macOS.
 
 Then, open the Dictionary app, select Dictionary > Settings. Choose the sources you want to download.
 
@@ -48,9 +48,11 @@ Install `pyglossary`:
 pip install pyglossary
 ```
 
-Then use `pyglossary` to point to the `Body.data` file, and convert to AppleDict Source. This will produces a XML file.
+Then use `pyglossary` to point to the `Body.data` file in the `.dictionary` folder, and convert to AppleDict Source. This will produce an XML file.
 
 From there, use [this script](https://gist.github.com/yell0wsuit/c25632f7c863d194edb2ded6d22a3cc3) to extract the XML file to HTML files.
+
+For more information about the Apple Dictionary binary format, [see here](https://github.com/ilius/pyglossary/blob/master/doc/p/appledict_bin.md).
 
 ## Usage
 

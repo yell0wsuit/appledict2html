@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.1] - 2025-07-08
+
+### v1.2.1 fixes
+
+- `process_folder` now correctly excludes files ending with `-htmlprocessed.html` instead of `_processed.html`, which could match unintended filenames. While v1.1.2 attempted to fix this, the issue was not fully resolved.
+
 ## [1.2.0] - 2025-07-08
 
 ### v1.2.0 additions
