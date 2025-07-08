@@ -110,7 +110,7 @@ excluded_classes = {
     "xrlabelGroup",
     "xrlabel",
     "tg_xrlabel",
-    "x_xot",
+    "x_xot",  # it can be paired with etym
     "tg_xr",  # supscript
     "xrg",
     "xr",

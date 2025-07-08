@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.0] - 2025-07-08
+
+### v1.2.0 additions
+
+- Add `--sanity-check` to check for unknown/undocumented classes in the HTML file. This is to help with debugging and development.
+- Convert `<span class="etym x_xo3">` (ORIGIN in the PHRASES section) to `<p>` and remove its classes.
+
+### v1.2.0 changes
+
+- Refactored `convert_xo1_to_list` in `process_definition_phrases.py` to better preserve and structure children, including inline origin blocks, when converting `x_xo1` and `x_xo2` spans.
+
 ## [1.1.2] - 2025-07-07
 
 ### v1.1.2 fixes
