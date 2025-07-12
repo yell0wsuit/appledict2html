@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1] - 2025-07-12
+
+### v1.3.1 fixes
+
+- Properly handle children when converting inside `<span class="se1">`.
+- Convert `<span class="gp ty_label tg_etym">` to `<p class="origin_title">`.
+
 ## [1.3.0] - 2025-07-12
 
 ### v1.3.0 changes
