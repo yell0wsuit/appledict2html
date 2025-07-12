@@ -20,6 +20,7 @@ def cleanup_stuff(soup: BeautifulSoup):
     convert_phrasal_block(soup)
     convert_note_block(soup)
     convert_phrase_origin_to_p(soup)
+    convert_etym_label_to_origin_title(soup)
     unwrap_span(soup)
     clean_attributes(soup)
     ensure_space_after_tags(soup, ["strong", "em"])
@@ -191,6 +192,19 @@ def convert_inline_origin_block(soup: BeautifulSoup):
             for attr in ["id", "role"]:
                 if attr in span.attrs:
                     del span.attrs[attr]
+
+
+def convert_etym_label_to_origin_title(soup: BeautifulSoup):
+    """
+    Convert <span class="gp ty_label tg_etym"> to <p class="origin_title">.
+    """
+    for span in soup.find_all("span"):
+        if not isinstance(span, Tag):
+            continue
+        classes = set(span.get("class") or [])
+        if {"gp", "ty_label", "tg_etym"}.issubset(classes):
+            span.name = "p"
+            span["class"] = cast(_AttributeValue, ["origin_title"])
 
 
 def inject_hw_linebreaks(soup: BeautifulSoup):

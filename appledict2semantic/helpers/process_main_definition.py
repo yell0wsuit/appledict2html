@@ -116,8 +116,15 @@ def process_se2_blocks(soup: BeautifulSoup, se1: Tag):
     se1.append(ul_top)
 
 
+KNOWN_BLOCK_CLASSES = {
+    "note": "note_block",
+    "etym": "origin_block",
+    "x_xdt": "origin_block",
+}
+
+
 def convert_senses_to_list(soup: BeautifulSoup):
-    """Convert main senses and subsenses into structured `<ul>`/`<li>` elements"""
+    """Convert main senses and subsenses into structured `<ul>`/`<li>` elements, preserving order of all children."""
 
     for se1 in soup.find_all("span", class_="se1"):
         if not isinstance(se1, Tag):
@@ -130,18 +137,36 @@ def convert_senses_to_list(soup: BeautifulSoup):
             if isinstance(pos_block, Tag):
                 convert_tag(pos_block, "p")
 
-        # --- Preserve order of children ---
         new_children = []
-        ul = soup.new_tag("ul")
+        sense_li_list = []
+
+        def flush_sense_list():
+            nonlocal sense_li_list
+            if sense_li_list:
+                ul = soup.new_tag("ul")
+                for li in sense_li_list:
+                    ul.append(li)
+                new_children.append(ul)
+                sense_li_list = []
+
         for child in list(se1.contents):
             if isinstance(child, Tag):
-                # Convert se2 to <li> and collect in <ul>
-                if set(child.get("class") or []) >= {"se2", "x_xd1", "hasSn"}:
+                child_classes = set(child.get("class") or [])
+                # Check for t_core or t_subsense (main senses)
+                if (
+                    "t_core" in child_classes
+                    or "t_subsense" in child_classes
+                    or (
+                        child.name == "span"
+                        and set(child.get("class") or []) >= {"se2", "x_xd1", "hasSn"}
+                    )
+                ):
                     convert_tag(child, "li")
                     # Move t_first and subsenses into li as in process_se2_blocks
                     t_first = child.find(
                         lambda t: isinstance(t, Tag)
-                        and set(t.get("class") or []) >= {"msDict", "x_xd1sub", "t_first"}
+                        and set(t.get("class") or [])
+                        >= {"msDict", "x_xd1sub", "t_first"}
                     )
                     if t_first and isinstance(t_first, Tag):
                         for content in list(t_first.contents):
@@ -162,33 +187,26 @@ def convert_senses_to_list(soup: BeautifulSoup):
                             sub_ul.append(li)
                     if sub_ul.contents:
                         child.append(sub_ul)
-                    ul.append(child)
-                # Convert note to <section class="note_block ...">
-                elif "note" in (child.get("class") or []):
-                    classes = child.get("class") or []
-                    new_classes = ["note_block" if c == "note" else c for c in classes]
-                    child["class"] = cast(_AttributeValue, new_classes)
-                    child.name = "section"
-                    new_children.append(child)
+                    sense_li_list.append(child)
                 else:
+                    # If we have collected senses, flush them as a <ul> before this non-sense child
+                    flush_sense_list()
+                    # Handle known block classes
+                    for orig, canonical in KNOWN_BLOCK_CLASSES.items():
+                        if orig in child_classes:
+                            new_classes = [
+                                canonical if c == orig else c for c in child_classes
+                            ]
+                            child["class"] = cast(_AttributeValue, new_classes)
+                            child.name = "section"
+                            break
                     new_children.append(child)
             else:
+                # If we have collected senses, flush them as a <ul> before this string
+                flush_sense_list()
                 new_children.append(child)
-        if ul.contents:
-            # Insert <ul> at the position of the first se2, or at the end if none
-            first_se2_idx = next(
-                (
-                    i
-                    for i, c in enumerate(new_children)
-                    if isinstance(c, Tag)
-                    and set(c.get("class") or []) >= {"note_block", "x_xd1"}
-                ),
-                None,
-            )
-            if first_se2_idx is not None:
-                new_children.insert(first_se2_idx, ul)
-            else:
-                new_children.append(ul)
+        # If any senses left at the end, flush them as a <ul>
+        flush_sense_list()
 
         se1.clear()
         for c in new_children:
