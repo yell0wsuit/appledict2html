@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.0] - 2025-07-12
+
+### v1.3.0 changes
+
+- Refactor `process_main_definition.py` to preserve the order of children during the conversion of `<se2>` to `<li>`.
+
 ## [1.2.3] - 2025-07-08
 
 ### v1.2.3 changes
