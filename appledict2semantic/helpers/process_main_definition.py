@@ -1,6 +1,9 @@
 """Module to process the main definition block"""
 
+from typing import cast
+
 from bs4 import BeautifulSoup, Tag
+from bs4._typing import _AttributeValue
 
 CLASS_SETS = {
     "t_core": {"msDict", "x_xd1", "t_core"},
@@ -126,6 +129,70 @@ def convert_senses_to_list(soup: BeautifulSoup):
         for pos_block in se1.find_all("span", class_="x_xdh"):
             if isinstance(pos_block, Tag):
                 convert_tag(pos_block, "p")
+
+        # --- Preserve order of children ---
+        new_children = []
+        ul = soup.new_tag("ul")
+        for child in list(se1.contents):
+            if isinstance(child, Tag):
+                # Convert se2 to <li> and collect in <ul>
+                if set(child.get("class") or []) >= {"se2", "x_xd1", "hasSn"}:
+                    convert_tag(child, "li")
+                    # Move t_first and subsenses into li as in process_se2_blocks
+                    t_first = child.find(
+                        lambda t: isinstance(t, Tag)
+                        and set(t.get("class") or []) >= {"msDict", "x_xd1sub", "t_first"}
+                    )
+                    if t_first and isinstance(t_first, Tag):
+                        for content in list(t_first.contents):
+                            child.append(content)
+                        t_first.decompose()
+                    # Handle subsenses
+                    sub_ul = soup.new_tag("ul")
+                    for subsense in child.find_all(
+                        lambda t: isinstance(t, Tag)
+                        and set(t.get("class") or [])
+                        >= {"msDict", "x_xd1sub", "hasSn", "t_subsense"},
+                        recursive=False,
+                    ):
+                        if isinstance(subsense, Tag):
+                            li = soup.new_tag("li")
+                            li.extend(subsense.contents)
+                            subsense.decompose()
+                            sub_ul.append(li)
+                    if sub_ul.contents:
+                        child.append(sub_ul)
+                    ul.append(child)
+                # Convert note to <section class="note_block ...">
+                elif "note" in (child.get("class") or []):
+                    classes = child.get("class") or []
+                    new_classes = ["note_block" if c == "note" else c for c in classes]
+                    child["class"] = cast(_AttributeValue, new_classes)
+                    child.name = "section"
+                    new_children.append(child)
+                else:
+                    new_children.append(child)
+            else:
+                new_children.append(child)
+        if ul.contents:
+            # Insert <ul> at the position of the first se2, or at the end if none
+            first_se2_idx = next(
+                (
+                    i
+                    for i, c in enumerate(new_children)
+                    if isinstance(c, Tag)
+                    and set(c.get("class") or []) >= {"note_block", "x_xd1"}
+                ),
+                None,
+            )
+            if first_se2_idx is not None:
+                new_children.insert(first_se2_idx, ul)
+            else:
+                new_children.append(ul)
+
+        se1.clear()
+        for c in new_children:
+            se1.append(c)
 
         process_t_core_blocks(soup, se1)
         process_se2_blocks(soup, se1)
